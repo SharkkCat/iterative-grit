@@ -1,0 +1,31 @@
+---
+import { profile } from '../data/site';
+---
+
+<footer id="contact" class="wrap">
+  <div class="inner">
+    <div class="left">
+      <span class="sign">Next run starts now.</span>
+      <span class="muted">{profile.openTo}</span>
+      <a class="mono accent mail" href={`mailto:${profile.email}`}>{profile.email}</a>
+    </div>
+    <div class="links">
+      <a href={profile.links.linkedin} rel="me">LinkedIn ↗</a>
+      <a href={profile.links.github} rel="me">GitHub ↗</a>
+      <a href={profile.links.resume}>Résumé ↓</a>
+    </div>
+  </div>
+</footer>
+
+<style>
+  footer { padding-top: 32px; padding-bottom: 56px; }
+  .inner {
+    display: flex; flex-wrap: wrap; gap: 24px; justify-content: space-between; align-items: flex-end;
+    padding-top: 64px; border-top: 1px solid var(--line);
+  }
+  .left { display: flex; flex-direction: column; gap: 12px; }
+  .sign { font-size: clamp(30px, 5vw, 40px); font-weight: 700; letter-spacing: -0.03em; line-height: 1.1; }
+  .mail { font-size: 15px; }
+  .links { display: flex; flex-wrap: wrap; gap: 8px 24px; font-size: 15px; }
+  .links a { padding: 10px 0; }
+</style>

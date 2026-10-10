@@ -1,0 +1,156 @@
+---
+import Base from '../../layouts/Base.astro';
+import Nav from '../../components/Nav.astro';
+import Footer from '../../components/Footer.astro';
+import { projects, profile, pad, type Project } from '../../data/site';
+import { url } from '../../lib/url';
+
+export function getStaticPaths() {
+  return projects.map((p) => ({ params: { slug: p.slug }, props: { p } }));
+}
+
+const { p } = Astro.props as { p: Project };
+const ordered = [...projects].sort((a, b) => b.number - a.number);
+const i = ordered.findIndex((x) => x.slug === p.slug);
+const prev = ordered[i + 1]; // older run
+const next = ordered[i - 1]; // newer run
+const lastIdx = p.iterations.length - 1;
+---
+
+<Base title={p.title} description={p.summary}>
+  <Nav back />
+
+  <main class="wrap">
+    <header class="head">
+      <p class="mono accent eyebrow">RUN #{pad(p.number)} · {p.context.toUpperCase()} · {p.dates}</p>
+      <h1>{p.title}</h1>
+      <p class="summary">{p.summary}</p>
+    </header>
+
+    <dl class="facts">
+      <div><dt class="label">MY ROLE</dt><dd>{p.role}</dd></div>
+      <div><dt class="label">METHODS</dt><dd>{p.methods}</dd></div>
+      <div><dt class="label">TOOLS</dt><dd>{p.tools}</dd></div>
+      <div class="result">
+        <dt class="label">RESULT</dt>
+        <dd>{p.metric.before} <span class="faint">→</span> <b class="accent">{p.metric.after}</b> <span class="faint">{p.metric.name}</span></dd>
+      </div>
+    </dl>
+
+    <section class="split">
+      <div class="split-head">
+        <h2>The problem</h2>
+        <span class="label">Context and baseline</span>
+      </div>
+      <div class="prose">
+        {p.problem.map((para) => <p>{para}</p>)}
+      </div>
+    </section>
+
+    <section class="iters">
+      <div class="section-head">
+        <h2>Iterations</h2>
+        <span class="label">The part most portfolios leave out</span>
+      </div>
+      <ol>
+        {
+          p.iterations.map((it, idx) => (
+            <li class:list={['panel', { final: idx === lastIdx }]}>
+              <span class="v mono">v{idx + 1}</span>
+              <div><span class="label">HYPOTHESIS</span><p>{it.hypothesis}</p></div>
+              <div><span class="label">CHANGE</span><p>{it.change}</p></div>
+              <div><span class="label">RESULT</span><p>{idx === lastIdx ? <b class="accent">{it.result}</b> : it.result}</p></div>
+            </li>
+          ))
+        }
+      </ol>
+    </section>
+
+    {
+      p.figure && (
+        <figure class="fig">
+          {p.figure.src ? (
+            <img src={url(p.figure.src)} alt={p.figure.alt ?? ''} loading="lazy" />
+          ) : (
+            <div class="placeholder mono">[Your real chart, layout drawing or process map: before vs after]</div>
+          )}
+          <figcaption>{p.figure.caption}</figcaption>
+        </figure>
+      )
+    }
+
+    <section class="split">
+      <div class="split-head">
+        <h2>Next iteration</h2>
+        <span class="label">What I'd change with more time</span>
+      </div>
+      <ul class="prose list">
+        {p.next.map((n) => <li>{n}</li>)}
+      </ul>
+    </section>
+
+    <nav class="pager" aria-label="More runs">
+      {
+        prev ? (
+          <a href={url(`/runs/${prev.slug}`)} class="pager-link">
+            <span class="label">← PREVIOUS RUN</span>
+            <span class="pager-title">#{pad(prev.number)} {prev.title}</span>
+          </a>
+        ) : next ? (
+          <a href={url(`/runs/${next.slug}`)} class="pager-link">
+            <span class="label">NEXT RUN →</span>
+            <span class="pager-title">#{pad(next.number)} {next.title}</span>
+          </a>
+        ) : (
+          <span />
+        )
+      }
+      <a class="btn btn-primary" href={`mailto:${profile.email}?subject=${encodeURIComponent(`About run #${pad(p.number)}`)}`}>Talk about this project</a>
+    </nav>
+  </main>
+
+  <Footer />
+</Base>
+
+<style>
+  .head { display: flex; flex-direction: column; gap: 22px; padding: 72px 0 40px; max-width: 860px; }
+  .eyebrow { margin: 0; font-size: 13px; }
+  h1 { margin: 0; font-size: clamp(36px, 6vw, 56px); line-height: 1.05; font-weight: 700; letter-spacing: -0.03em; }
+  .summary { margin: 0; font-size: 20px; line-height: 1.6; color: var(--muted); }
+
+  .facts {
+    margin: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden;
+  }
+  .facts > div { padding: 20px 24px; display: flex; flex-direction: column; gap: 6px; box-shadow: 1px 0 0 var(--line), 0 1px 0 var(--line); }
+  .facts dd { margin: 0; font-size: 16px; }
+  .facts .result { background: var(--surface); }
+
+  h2 { margin: 0; font-size: 28px; font-weight: 600; letter-spacing: -0.02em; }
+  .split { display: flex; flex-wrap: wrap; gap: 16px 48px; padding: 72px 0 32px; }
+  .split-head { flex: 1 1 260px; display: flex; flex-direction: column; gap: 10px; }
+  .prose { flex: 2 1 520px; min-width: 0; display: flex; flex-direction: column; gap: 16px; font-size: 17px; line-height: 1.7; color: var(--text-2); }
+  .prose p { margin: 0; }
+  .list { margin: 0; padding-left: 18px; gap: 10px; }
+
+  .iters { padding: 40px 0; }
+  .iters ol { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+  .iters li { display: flex; flex-wrap: wrap; gap: 16px 20px; padding: 24px; }
+  .iters li.final { border-color: var(--accent); }
+  .iters li > div { flex: 1 1 200px; display: flex; flex-direction: column; gap: 6px; }
+  .iters p { margin: 0; font-size: 15px; line-height: 1.55; }
+  .v { flex: 0 0 64px; font-size: 22px; color: var(--faint); }
+  .final .v { color: var(--accent); }
+
+  .fig { margin: 0; padding: 40px 0; display: flex; flex-direction: column; gap: 12px; }
+  .fig img { border-radius: var(--radius); border: 1px solid var(--line); }
+  .placeholder {
+    min-height: 320px; border: 1px dashed var(--line-strong); border-radius: var(--radius); background: var(--surface);
+    display: flex; align-items: center; justify-content: center; text-align: center; padding: 24px; font-size: 14px; color: var(--faint);
+  }
+  figcaption { font-size: 14px; color: var(--faint); }
+
+  .pager { display: flex; flex-wrap: wrap; gap: 16px; justify-content: space-between; align-items: center; margin-top: 40px; padding: 32px 0 0; border-top: 1px solid var(--line); }
+  .pager-link { display: flex; flex-direction: column; gap: 6px; text-decoration: none; }
+  .pager-title { font-size: 18px; font-weight: 600; }
+</style>

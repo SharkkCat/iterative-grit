@@ -1,0 +1,21 @@
+---
+import Base from '../layouts/Base.astro';
+import Nav from '../components/Nav.astro';
+import { url } from '../lib/url';
+---
+
+<Base title="Not found">
+  <Nav />
+  <main class="wrap nf">
+    <p class="mono accent">404 · OUT OF CONTROL LIMITS</p>
+    <h1>This run didn't land.</h1>
+    <p class="muted">The page you're after doesn't exist. Adjust and try again.</p>
+    <a class="btn btn-primary" href={url('/')}>Back to home</a>
+  </main>
+</Base>
+
+<style>
+  .nf { min-height: 70vh; display: flex; flex-direction: column; justify-content: center; align-items: flex-start; gap: 20px; }
+  .nf p { margin: 0; }
+  h1 { margin: 0; font-size: clamp(40px, 7vw, 64px); letter-spacing: -0.035em; line-height: 1.05; }
+</style>

@@ -1,0 +1,234 @@
+---
+import Base from '../layouts/Base.astro';
+import Nav from '../components/Nav.astro';
+import Footer from '../components/Footer.astro';
+import RunChart from '../components/RunChart.astro';
+import { profile, stats, experience, education, skills, projects, pad } from '../data/site';
+import { url } from '../lib/url';
+
+const featured = projects.filter((p) => p.featured);
+const others = projects.filter((p) => !p.featured);
+const byslug = Object.fromEntries(projects.map((p) => [p.slug, p]));
+---
+
+<Base>
+  <Nav />
+
+  <main>
+    <section class="hero wrap">
+      <div class="hero-text">
+        <p class="eyebrow mono accent">{profile.field} · {profile.school} · Class of {profile.gradYear}</p>
+        <h1>{profile.headline}</h1>
+        <p class="intro">I'm {profile.name}. {profile.intro}</p>
+        <p class="now"><span class="pulse" aria-hidden="true"></span><span><b>Now:</b> {profile.now}</span></p>
+        <div class="ctas">
+          <a class="btn btn-primary" href="#runs">See projects</a>
+          <a class="btn btn-ghost" href="#contact">Contact</a>
+        </div>
+      </div>
+      <div class="hero-chart"><RunChart /></div>
+    </section>
+
+    <section class="wrap" aria-label="At a glance">
+      <dl class="stats">
+        {
+          stats.map((s) => (
+            <div>
+              <dt class="label">{s.label}</dt>
+              <dd class:list={{ accent: s.accent }}>{s.value}</dd>
+            </div>
+          ))
+        }
+      </dl>
+    </section>
+
+    <section id="experience" class="section wrap">
+      <div class="section-head">
+        <h2>Experience</h2>
+        <span class="label">Every bullet: what changed, by how much</span>
+      </div>
+      <ol class="timeline">
+        {
+          experience.map((e) => (
+            <li>
+              <div class="when">
+                <span class:list={['mono', e.current ? 'accent' : 'faint']}>{e.dates}</span>
+                {e.place && <span class="faint small">{e.place}</span>}
+              </div>
+              <div class="what">
+                <h3>
+                  {e.role}
+                  <span class="faint"> · {e.org}</span>
+                </h3>
+                {e.blurb && <p class="faint small">{e.blurb}</p>}
+                <ul>
+                  {e.bullets.map((b) => (
+                    <li>{b}</li>
+                  ))}
+                </ul>
+                {(e.tags?.length || e.run) && (
+                  <div class="tags">
+                    {e.tags?.map((t) => (
+                      <span class="tag">{t}</span>
+                    ))}
+                    {e.run && byslug[e.run] && (
+                      <a class="tag" href={url(`/runs/${e.run}`)}>
+                        → Run #{pad(byslug[e.run].number)}
+                      </a>
+                    )}
+                  </div>
+                )}
+              </div>
+            </li>
+          ))
+        }
+        <li>
+          <div class="when"><span class="mono faint">{education.dates}</span></div>
+          <div class="what">
+            <h3>{education.degree}<span class="faint"> · {education.school}</span></h3>
+            <p class="muted">Relevant coursework: {education.coursework}</p>
+          </div>
+        </li>
+      </ol>
+    </section>
+
+    <section id="runs" class="section wrap">
+      <div class="section-head">
+        <h2>Selected runs</h2>
+        <span class="label">Projects, newest first</span>
+      </div>
+      <div class="cards">
+        {
+          featured.map((p, i) => (
+            <a class:list={['card', 'panel', { lead: i === 0 }]} href={url(`/runs/${p.slug}`)}>
+              <div class="card-top mono">
+                <span class="accent">RUN #{pad(p.number)} · {p.context.toUpperCase()}</span>
+                <span class="faint">{p.iterations.length} iteration{p.iterations.length === 1 ? '' : 's'}</span>
+              </div>
+              <h3>{p.title}</h3>
+              <div class="delta mono">
+                <span><span class="label">BEFORE</span><b>{p.metric.before}</b></span>
+                <span class="faint" aria-hidden="true">→</span>
+                <span><span class="label">AFTER</span><b class="accent">{p.metric.after}</b></span>
+                <span class="label metric">{p.metric.name}</span>
+              </div>
+              <span class="muted more">Read case study →</span>
+            </a>
+          ))
+        }
+      </div>
+      {
+        others.length > 0 && (
+          <ul class="others">
+            {others.map((p) => (
+              <li>
+                <a href={url(`/runs/${p.slug}`)}>
+                  <span class="mono faint">#{pad(p.number)}</span>
+                  <span>{p.title}</span>
+                  <span class="faint small">{p.context}</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        )
+      }
+    </section>
+
+    <section id="skills" class="section wrap">
+      <div class="section-head">
+        <h2>Skills, with evidence</h2>
+        <span class="label">Levels are self-rated; links show where each was used</span>
+      </div>
+      <div class="skills panel">
+        {
+          skills.map((s) => (
+            <div class="skill">
+              <span class="label group">{s.group}</span>
+              <span class="name">{s.name}</span>
+              <span class="bar" role="img" aria-label={`${s.level} out of 5`}>
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <span class:list={{ on: i <= s.level }} />
+                ))}
+              </span>
+              <span class="used mono">
+                {s.used
+                  .filter((slug) => byslug[slug])
+                  .map((slug) => (
+                    <a href={url(`/runs/${slug}`)}>#{pad(byslug[slug].number)}</a>
+                  ))}
+              </span>
+            </div>
+          ))
+        }
+      </div>
+    </section>
+  </main>
+
+  <Footer />
+</Base>
+
+<style>
+  .hero { display: flex; flex-wrap: wrap; gap: 48px; align-items: center; padding-top: 80px; padding-bottom: 72px; }
+  .hero-text { flex: 1 1 460px; min-width: 0; display: flex; flex-direction: column; gap: 22px; }
+  .hero-chart { flex: 1 1 400px; min-width: 0; }
+  .eyebrow { margin: 0; font-size: 13px; }
+  h1 { margin: 0; font-size: clamp(44px, 7vw, 64px); line-height: 1.02; font-weight: 700; letter-spacing: -0.035em; }
+  .intro { margin: 0; font-size: 19px; line-height: 1.6; color: var(--muted); max-width: 520px; }
+  .now { margin: 0; display: flex; gap: 10px; align-items: baseline; font-size: 15px; color: var(--text-2); }
+  .now b { color: var(--text); }
+  .pulse { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); flex: none; transform: translateY(-1px); }
+  .ctas { display: flex; flex-wrap: wrap; gap: 12px; padding-top: 6px; }
+
+  .stats {
+    margin: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden;
+  }
+  .stats > div { padding: 22px 24px; display: flex; flex-direction: column-reverse; gap: 6px; box-shadow: 1px 0 0 var(--line), 0 1px 0 var(--line); }
+  .stats dd { margin: 0; font-size: 30px; font-weight: 700; }
+  .stats dt { font-family: var(--sans); font-size: 13px; }
+
+  .timeline { list-style: none; margin: 0; padding: 0; }
+  .timeline > li { display: flex; flex-wrap: wrap; gap: 12px 24px; padding: 28px 0; border-top: 1px solid var(--line); }
+  .timeline > li:last-child { border-bottom: 1px solid var(--line); }
+  .when { flex: 0 0 200px; display: flex; flex-direction: column; gap: 6px; font-size: 13px; }
+  .what { flex: 1 1 480px; min-width: 0; display: flex; flex-direction: column; gap: 12px; }
+  .what h3 { margin: 0; font-size: 21px; font-weight: 600; line-height: 1.3; }
+  .what h3 .faint { font-weight: 400; }
+  .what p { margin: 0; line-height: 1.55; }
+  .what ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 8px; font-size: 16px; line-height: 1.55; color: var(--text-2); }
+  .tags { display: flex; flex-wrap: wrap; gap: 8px; }
+  .small { font-size: 13px; }
+
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(340px, 100%), 1fr)); gap: 16px; }
+  .card { text-decoration: none; padding: 28px; display: flex; flex-direction: column; gap: 16px; transition: border-color .15s, transform .15s; }
+  .card.lead { border-color: var(--line-strong); }
+  .card:hover { color: inherit; border-color: var(--accent); transform: translateY(-2px); }
+  .card-top { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; font-size: 12px; }
+  .card h3 { margin: 0; font-size: 24px; font-weight: 600; line-height: 1.25; }
+  .delta { display: flex; align-items: center; gap: 14px; padding: 14px 16px; background: var(--bg); border-radius: 8px; }
+  .delta > span:not(.faint):not(.metric) { display: flex; flex-direction: column; gap: 2px; }
+  .delta b { font-size: 20px; font-weight: 500; }
+  .delta .metric { margin-left: auto; text-align: right; }
+  .more { font-size: 15px; margin-top: auto; }
+  .card:hover .more { color: var(--accent); }
+
+  .others { list-style: none; margin: 16px 0 0; padding: 0; border-top: 1px solid var(--line); }
+  .others a { display: flex; flex-wrap: wrap; gap: 6px 20px; align-items: baseline; padding: 16px 0; border-bottom: 1px solid var(--line); text-decoration: none; }
+
+  .skills { overflow: hidden; }
+  .skill { display: flex; flex-wrap: wrap; gap: 10px 24px; align-items: center; padding: 18px 24px; border-bottom: 1px solid var(--line); }
+  .skill:last-child { border-bottom: 0; }
+  .group { flex: 0 0 120px; }
+  .name { flex: 1 1 240px; font-size: 16px; font-weight: 500; }
+  .bar { display: flex; gap: 4px; }
+  .bar span { width: 22px; height: 8px; border-radius: 2px; background: var(--track); }
+  .bar span.on { background: var(--accent); }
+  .used { flex: 0 0 120px; display: flex; gap: 10px; justify-content: flex-end; font-size: 12px; }
+  .used a { color: var(--muted); padding: 4px 0; }
+
+  @media (max-width: 640px) {
+    .hero { padding-top: 48px; }
+    .used { justify-content: flex-start; }
+    .group { flex-basis: 100%; }
+  }
+</style>

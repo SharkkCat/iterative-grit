@@ -1,0 +1,54 @@
+---
+// Run history: one point per project, oldest → newest, each linking to its case study.
+import { projects, pad } from '../data/site';
+import { url } from '../lib/url';
+
+const runs = [...projects].sort((a, b) => a.number - b.number);
+const W = 440, H = 230, left = 50, right = 400, top = 62, bottom = 180;
+const n = runs.length;
+const pts = runs.map((p, i) => {
+  const t = n === 1 ? 1 : i / (n - 1);
+  return { p, x: left + t * (right - left), y: bottom - t * (bottom - top), last: i === n - 1 };
+});
+const line = pts.map((d) => `${d.x},${d.y}`).join(' ');
+---
+
+<figure class="panel chart">
+  <div class="head label"><span>RUN HISTORY</span><span>scope of problem ↑</span></div>
+  <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-labelledby="run-chart-title">
+    <title id="run-chart-title">Run history: {n} projects in order, each tackling a bigger problem than the last</title>
+    <line x1="20" y1="200" x2="430" y2="200" stroke="var(--line-strong)" />
+    <line x1="20" y1="140" x2="430" y2="140" stroke="var(--line)" stroke-dasharray="3 5" />
+    <line x1="20" y1="80" x2="430" y2="80" stroke="var(--line)" stroke-dasharray="3 5" />
+    <polyline points={line} fill="none" stroke="#5b6573" stroke-width="1.5" />
+    {
+      pts.map((d) => (
+        <a href={url(`/runs/${d.p.slug}`)} class:list={['pt', { last: d.last }]}>
+          <title>{`#${pad(d.p.number)} — ${d.p.title}`}</title>
+          <circle cx={d.x} cy={d.y} r="16" fill="transparent" />
+          {d.last && <circle cx={d.x} cy={d.y} r="13" fill="none" stroke="var(--accent)" stroke-opacity="0.4" />}
+          <circle class="dot" cx={d.x} cy={d.y} r={d.last ? 7 : 5} />
+          <text x={d.x} y={d.y - (d.last ? 22 : 13)} text-anchor="middle">
+            {`#${pad(d.p.number)}${d.last ? ' now' : ''}`}
+          </text>
+        </a>
+      ))
+    }
+    <text x="430" y="220" text-anchor="end" class="axis">time →</text>
+  </svg>
+  <figcaption>Each point is a project. Tap one to open it.</figcaption>
+</figure>
+
+<style>
+  .chart { margin: 0; padding: 24px; display: flex; flex-direction: column; gap: 14px; }
+  .head { display: flex; justify-content: space-between; }
+  svg { width: 100%; height: auto; overflow: visible; }
+  svg text { font-family: var(--mono); font-size: 11px; fill: var(--muted); }
+  svg .axis { fill: var(--faint); }
+  .dot { fill: var(--faint); transition: fill .15s; }
+  .last .dot { fill: var(--accent); }
+  .last text { fill: var(--accent); }
+  .pt:hover .dot, .pt:focus-visible .dot { fill: var(--accent); }
+  .pt:hover text { fill: var(--text); }
+  figcaption { font-size: 13px; color: var(--faint); line-height: 1.5; }
+</style>
